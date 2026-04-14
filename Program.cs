@@ -1,26 +1,30 @@
-﻿using Backend;
-using System;
-using System.Data.Common;
+﻿using Microsoft.EntityFrameworkCore;
+using PopulationService.Data;
+using PopulationService.ExternalServices;
+using PopulationService.Interfaces;
+using PopulationService.Services;
 
-Console.WriteLine("Started");
-Console.WriteLine("Getting DB Connection...");
+var builder = WebApplication.CreateBuilder(args);
 
-IDbManager db = new SqliteDbManager();
-DbConnection conn = db.GetConnection();
+// EF Core - SQLite
+builder.Services.AddDbContext<PopulationDbContext>(options =>
+    options.UseSqlite("Data Source=citystatecountry.db"));
 
-if (conn == null)
-{
-    Console.WriteLine("Failed to get connection");
-}
-else
-{
-    // Temporary: inspect schema
-    using var cmd = conn.CreateCommand();
-    cmd.CommandText = "SELECT sql FROM sqlite_master WHERE type='table';";
-    using var reader = cmd.ExecuteReader();
-    while (reader.Read())
-    {
-        Console.WriteLine(reader.GetString(0));
-    }
-    conn.Close();
-}
+// Services
+builder.Services.AddScoped<IPopulationRepository, PopulationRepository>();
+builder.Services.AddScoped<IStatService, ConcreteStatService>();
+builder.Services.AddScoped<IPopulationAggregationService, PopulationAggregationService>();
+
+// Web API
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+var app = builder.Build();
+
+app.UseSwagger();
+app.UseSwaggerUI();
+
+app.MapControllers();
+
+app.Run();
