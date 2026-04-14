@@ -2,7 +2,7 @@ using PopulationService.Models;
 
 namespace PopulationService.Interfaces;
 
-public interface IStatService
+public interface ICountryStatsService
 {
     Task<List<CountryPopulation>> GetCountryPopulationsAsync();
 }

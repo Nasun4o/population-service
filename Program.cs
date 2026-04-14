@@ -12,15 +12,19 @@ builder.Services.AddDbContext<PopulationDbContext>(options =>
 
 // Services
 builder.Services.AddScoped<IPopulationRepository, PopulationRepository>();
-builder.Services.AddScoped<IStatService, ConcreteStatService>();
+builder.Services.AddScoped<ICountryStatsService, CountryStatsService>();
 builder.Services.AddScoped<IPopulationAggregationService, PopulationAggregationService>();
 
 // Web API
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddProblemDetails();
 
 var app = builder.Build();
+
+app.UseExceptionHandler();
+app.UseStatusCodePages();
 
 app.UseSwagger();
 app.UseSwaggerUI();

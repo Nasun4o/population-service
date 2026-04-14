@@ -3,7 +3,7 @@ using PopulationService.Models;
 
 namespace PopulationService.ExternalServices;
 
-public class ConcreteStatService : IStatService
+public class CountryStatsService : ICountryStatsService
 {
     public Task<List<CountryPopulation>> GetCountryPopulationsAsync()
     {
