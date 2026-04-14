@@ -1,0 +1,27 @@
+## .NET build output
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+
+## NuGet
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nupkg
+
+## Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstats
+*.rsuser
+*.csproj.user
+*.DotSettings.user
+
+## Build logs
+[Bb]uild[Ll]og.*
+
+## Test results
+[Tt]est[Rr]esult*/
+TestResult.xml
