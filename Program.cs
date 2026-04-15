@@ -7,11 +7,14 @@ using PopulationService.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // EF Core - SQLite
-builder.Services.AddDbContext<PopulationDbContext>(options =>
-    options.UseSqlite("Data Source=citystatecountry.db"));
+var connectionString = builder.Configuration.GetConnectionString("PopulationDb")
+    ?? throw new InvalidOperationException("Connection string 'PopulationDb' not found.");
+
+builder.Services.AddDbContext<CountryPopulationDbContext>(options =>
+    options.UseSqlite(connectionString));
 
 // Services
-builder.Services.AddScoped<IPopulationRepository, PopulationRepository>();
+builder.Services.AddScoped<ICountryPopulationRepository, CountryPopulationRepository>();
 builder.Services.AddScoped<ICountryStatsService, CountryStatsService>();
 builder.Services.AddScoped<IPopulationAggregationService, PopulationAggregationService>();
 
@@ -26,9 +29,14 @@ var app = builder.Build();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
-app.UseSwagger();
-app.UseSwaggerUI();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.MapControllers();
 
 app.Run();
+
+public partial class Program { }

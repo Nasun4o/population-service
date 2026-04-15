@@ -1,26 +1,85 @@
-# Materials for developer interviews for Quickbase
+# Population Service
 
-## Purpose
-The purpose of this exercise is not to give a "gotcha" question or puzzle, but a straight-forward (albeit contrived)
-example of the kind of requirement that might arise in a real project so that we have shared context for a technical 
-conversation during the interview. We are interested in how you approach a project, so you should feel free to add new 
-class files as well modify the files that are provided as you see fit. Use of your favorite libraries or frameworks is
-encouraged, but not required. How you demonstrate the correctness of your implementation is up to you.
+A .NET 8 Web API that aggregates country population data from two sources — a local SQLite database and an 'external' Country Stats Service — and exposes the result through a single REST endpoint.
 
-## Requirements
-The project requirement is to aggregate data (in this case population statistics) from two disparate sources.
-We've provided two classes to represent those sources. `SqliteDbManager.cs`, provides access to a SQL database containing population
-data for cities.  Each city is in a state within a country.  You need to write a method to retrieve the total
-population for each country.  The other class, `IStatService.cs`, returns a `List<Tuple<String, Integer>>` containing 
-country population data. For the purposes of this exercise, we've provided a concrete class that just returns a 
-hard-coded list, but in a real project, assume it would be calling an API.
+## How to Run
 
-The assignment is to implement a solution that consumes these two data sources and returns the combined list of
-countries and their populations. In the event of duplicate population data for a given country, the data from
-the sql database should be used. 
+Prerequisites: .NET 8 SDK, Visual Studio 2022+
 
-## Building and Running the code
+```bash
+dotnet run --project PopulationService
+```
 
-This project assumes you're using Visual Studio 2022 or newer and depends on nuget.
+The API will be available at `https://localhost:{port}/api/populations`.
+Swagger UI is available at `https://localhost:{port}/swagger` in development.
 
-That said, feel free to challenge any of the current limitations with your demo. Just keep the time limit in mind.
+```bash
+dotnet test
+```
+
+---
+
+## API
+
+There is one endpoint:
+
+`GET /api/populations` — returns all countries with their aggregated population, sorted alphabetically.
+
+```json
+[
+  { "countryName": "Canada", "population": 37000000 },
+  { "countryName": "Germany", "population": 1500000 }
+]
+```
+
+---
+
+## Architecture
+
+Single Web API project with folder-based layering:
+
+```
+PopulationService/
+├── Controllers/        ← HTTP layer (PopulationsController)
+├── Services/           ← Business logic (PopulationAggregationService)
+├── Data/               ← EF Core DbContext, repository, entities
+├── ExternalServices/   ← CountryStatsService (hard-coded stub, real API in production)
+├── Interfaces/         ← Contracts for DI and testability
+└── Models/             ← CountryPopulation record (shared model)
+```
+
+Why a single project? One entity, one endpoint — splitting into Core/Infrastructure/Api would be over-engineering here. The folder structure maps 1:1 to a multi-project layout, so that migration is trivial if needed.
+
+Why Web API over a console app? Easier to demo, Swagger gives free documentation, and it's the right shape for a data-serving solution.
+
+Why EF Core over raw ADO.NET? LINQ, async support, proper entity mapping, and easy testability using in-memory SQLite. The original `SqliteDbManager` with raw SQL was replaced entirely.
+
+---
+
+## Key Design Decisions
+
+- DB wins on duplicates — when both sources return data for the same country, the database value is used, per the requirement. Matching is case-insensitive so `"usa"` and `"USA"` are treated as the same country.
+- Both data sources are fetched concurrently with `Task.WhenAll`. This matters when `CountryStatsService` becomes a real HTTP call.
+- `City.Population` is nullable in the schema; null is coalesced to 0 during aggregation so a missing value doesn't break the sum.
+- No DTOs — `CountryPopulation` is a flat immutable record that is already the correct API shape. A separate response DTO would be identical with no benefit.
+- Error handling uses .NET 8's built-in `AddProblemDetails()` + `UseExceptionHandler()`, so unhandled exceptions return a consistent JSON error shape with no custom middleware needed.
+
+---
+
+## Testing
+
+- Unit tests cover `PopulationAggregationService` and `PopulationsController` in isolation using Moq, with no infrastructure involved.
+- Integration tests cover `PopulationRepository` against a real in-memory SQLite database, and `PopulationsController` end-to-end using `WebApplicationFactory` with a seeded in-memory SQLite database replacing the real one.
+
+---
+
+## If This Project Grew
+
+- `ICountryStatsService` is already an interface. An `HttpCountryStatsService` using `IHttpClientFactory` with Polly retry policies is a zero-effort addition when the stub needs to become a real HTTP call.
+- Swapping SQLite for PostgreSQL or SQL Server only requires changing the connection string and EF Core provider — the Repository pattern (`ICountryPopulationRepository`) keeps the rest of the application completely unaware of what database sits behind it.
+- The folder structure maps directly to separate Core/Infrastructure/Api projects for compiler-enforced layer boundaries when the codebase grows.
+- A `Dockerfile` and `docker-compose.yml` would let the API and a real database run together with a single `docker-compose up`.
+- Authentication, rate limiting, and health checks would be the next production additions.
+- The built-in `ILogger<T>` is already wired up across the service, repository, and controller. In production, swap the default provider for a structured logging library as Serilog is the most common choice.
+- Integration tests could be moved to Testcontainers to run against the same database engine used in production instead of in-memory SQLite.
+

@@ -5,7 +5,12 @@ namespace PopulationService.ExternalServices;
 
 public class CountryStatsService : ICountryStatsService
 {
-    public Task<List<CountryPopulation>> GetCountryPopulationsAsync()
+    /// <summary>
+    /// Simulates an asynchronous call to an external service to retrieve country population data.
+    /// </summary>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>A list of countries and their populations.</returns>
+    public Task<List<CountryPopulation>> GetCountryPopulationsAsync(CancellationToken cancellationToken = default)
     {
         var data = new List<CountryPopulation>
         {

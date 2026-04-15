@@ -3,9 +3,9 @@ using PopulationService.Data.Entities;
 
 namespace PopulationService.Data;
 
-public class PopulationDbContext : DbContext
+public class CountryPopulationDbContext : DbContext
 {
-    public PopulationDbContext(DbContextOptions<PopulationDbContext> options)
+    public CountryPopulationDbContext(DbContextOptions<CountryPopulationDbContext> options)
         : base(options)
     {
     }

@@ -4,6 +4,11 @@ namespace PopulationService.Interfaces
 {
     public interface IPopulationAggregationService
     {
-        Task<List<CountryPopulation>> GetAggregatedPopulationsAsync();
+        /// <summary>
+        /// Retrieves the aggregated population data for all countries.
+        /// </summary>
+        /// <param name="cancellationToken">A token to cancel the operation.</param>
+        /// <returns>A list of countries and their populations.</returns>
+        Task<List<CountryPopulation>> GetAggregatedPopulationsAsync(CancellationToken cancellationToken = default);
     }
 }
