@@ -40,15 +40,17 @@ Single Web API project with folder-based layering:
 
 ```
 PopulationService/
-├── Controllers/        ← HTTP layer (PopulationsController)
-├── Services/           ← Business logic (PopulationAggregationService)
-├── Data/               ← EF Core DbContext, repository, entities
-├── ExternalServices/   ← CountryStatsService (hard-coded stub, real API in production)
-├── Interfaces/         ← Contracts for DI and testability
-└── Models/             ← CountryPopulation record (shared model)
+├── Controllers/        - HTTP layer (PopulationsController)
+├── Services/           - Business logic (PopulationAggregationService)
+├── Data/               - EF Core DbContext, repository, entities
+├── ExternalServices/   - CountryStatsService (hard-coded stub, real API in production)
+├── Interfaces/         - Contracts for DI and testability
+└── Models/             - CountryPopulation record (shared model)
 ```
 
 Why a single project? One entity, one endpoint — splitting into Core/Infrastructure/Api would be over-engineering here. The folder structure maps 1:1 to a multi-project layout, so that migration is trivial if needed.
+
+If the domain grows significantly (multiple aggregates, complex business rules, cross-cutting concerns), Clean Architecture would be a natural next step — separating the solution into `Domain`, `Application`, `Infrastructure`, and `Presentation` layers with strict inward-only dependency rules.
 
 Why Web API over a console app? Easier to demo, Swagger gives free documentation, and it's the right shape for a data-serving solution.
 
